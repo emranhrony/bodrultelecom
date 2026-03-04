@@ -7,10 +7,38 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- LOGIN MODAL -->
+  <div id="authModal" class="modal">
+    <div class="modalCard">
+      <h2>Bodrul Telecom</h2>
+      <p class="muted">Login করলে সব ডিভাইসে একই ডেটা Sync হবে</p>
+
+      <form id="authForm" class="grid2">
+        <div class="full">
+          <label>Email</label>
+          <input id="authEmail" type="email" placeholder="you@email.com" required />
+        </div>
+        <div class="full">
+          <label>Password</label>
+          <input id="authPass" type="password" placeholder="********" required />
+        </div>
+
+        <button class="btn primary" type="submit" id="loginBtn">Login / Register</button>
+        <button class="btn ghost" type="button" id="guestBtn" title="ডেটা sync হবে না">Guest (লোকাল)</button>
+      </form>
+
+      <small class="muted">Tip: প্রথমবার Login দিলে অটো Register হয়ে যাবে।</small>
+    </div>
+  </div>
+
   <header class="topbar">
     <div class="brand">
       <h1 id="shopName">Bodrul Telecom</h1>
       <p class="sub">স্টক • ক্রয় • বিক্রয়</p>
+      <div class="userline">
+        <span id="userBadge" class="badge">Not logged in</span>
+        <button id="logoutBtn" class="btn ghost small" style="display:none;">Logout</button>
+      </div>
     </div>
 
     <div class="themeBox">
@@ -156,10 +184,10 @@
   </main>
 
   <footer class="footer">
-    <small>© <span id="yr"></span> Bodrul Telecom • LocalStorage powered</small>
+    <small>© <span id="yr"></span> Bodrul Telecom • Cloud Sync (Firebase)</small>
   </footer>
 
-  <script type="module" src="cloud.js"></script>
-  <script src="app.js"></script>
+  <script type="module" src="firebase.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>
