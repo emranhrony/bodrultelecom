@@ -6,12 +6,13 @@ import { getFirestore, doc, setDoc, getDoc, collection, getDocs, addDoc, serverT
 
 // 1) আপনার Firebase config (Project settings → Web app)
 const firebaseConfig = {
-  apiKey: "....",
-  authDomain: "....",
-  projectId: "....",
-  storageBucket: "....",
-  messagingSenderId: "....",
-  appId: "...."
+  apiKey: "AIzaSyBLMg5Qcq_jxN-todHIbPV66JfaeuGDz94",
+  authDomain: "bodrultelecom-6763f.firebaseapp.com",
+  projectId: "bodrultelecom-6763f",
+  storageBucket: "bodrultelecom-6763f.firebasestorage.app",
+  messagingSenderId: "822994053076",
+  appId: "1:822994053076:web:b359d83fbdac305a8c5841",
+  measurementId: "G-VM0H4W7S9C"
 };
 
 const app = initializeApp(firebaseConfig);
