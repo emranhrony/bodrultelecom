@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bodrul Telecom | Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <h1 id="shopName">Bodrul Telecom</h1>
+      <p class="sub">স্টক • ক্রয় • বিক্রয়</p>
+    </div>
+
+    <div class="themeBox">
+      <label for="hue">Color slide (Theme)</label>
+      <input id="hue" type="range" min="0" max="360" value="210" />
+      <div class="chip" id="chip"></div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h2>প্রডাক্ট যোগ করুন</h2>
+      <form id="addProductForm" class="grid2">
+        <div>
+          <label>Product নাম</label>
+          <input id="pName" placeholder="যেমন: Sim / Charger / Earphone" required />
+        </div>
+        <div>
+          <label>কেনা দাম (৳)</label>
+          <input id="pBuy" type="number" min="0" step="1" placeholder="যেমন: 100" required />
+        </div>
+        <div>
+          <label>বিক্রি দাম (৳)</label>
+          <input id="pSell" type="number" min="0" step="1" placeholder="যেমন: 120" required />
+        </div>
+        <div>
+          <label>শুরুর স্টক</label>
+          <input id="pStock" type="number" min="0" step="1" placeholder="যেমন: 10" required />
+        </div>
+
+        <button class="btn primary" type="submit">Add Product</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>স্টক / বিক্রয়</h2>
+
+      <div class="row gap">
+        <div class="box">
+          <h3>Sell (বিক্রয় এন্ট্রি)</h3>
+          <form id="sellForm" class="grid2">
+            <div class="full">
+              <label>Product</label>
+              <select id="sellProduct" required></select>
+            </div>
+            <div>
+              <label>পরিমাণ</label>
+              <input id="sellQty" type="number" min="1" step="1" value="1" required />
+            </div>
+            <div>
+              <label>ডিসকাউন্ট (৳)</label>
+              <input id="sellDiscount" type="number" min="0" step="1" value="0" />
+            </div>
+            <button class="btn danger" type="submit">Sell Now</button>
+          </form>
+        </div>
+
+        <div class="box">
+          <h3>Purchase/Stock Add (ক্রয়/স্টক যোগ)</h3>
+          <form id="stockForm" class="grid2">
+            <div class="full">
+              <label>Product</label>
+              <select id="stockProduct" required></select>
+            </div>
+            <div>
+              <label>যোগ করার পরিমাণ</label>
+              <input id="stockQty" type="number" min="1" step="1" value="1" required />
+            </div>
+            <div class="full">
+              <label>নোট (ঐচ্ছিক)</label>
+              <input id="stockNote" placeholder="যেমন: wholesaler থেকে আনা" />
+            </div>
+            <button class="btn" type="submit">Add Stock</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="row gap">
+        <div class="box">
+          <h3>Current Stock</h3>
+          <div class="tableWrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Buy</th>
+                  <th>Sell</th>
+                  <th>Stock</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="productTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="box">
+          <h3>ক্রয় / বিক্রয় হিসাব</h3>
+          <div class="tabs">
+            <button class="tab active" data-tab="sales">বিক্রয়</button>
+            <button class="tab" data-tab="purchases">ক্রয়/স্টক</button>
+          </div>
+
+          <div id="sales" class="tabPanel active">
+            <div class="tableWrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>সময়</th>
+                    <th>Product</th>
+                    <th>Qty</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody id="salesTable"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="purchases" class="tabPanel">
+            <div class="tableWrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>সময়</th>
+                    <th>Product</th>
+                    <th>Qty</th>
+                    <th>Note</th>
+                  </tr>
+                </thead>
+                <tbody id="purchaseTable"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button id="exportBtn" class="btn">Export JSON</button>
+            <button id="resetBtn" class="btn ghost">Reset All</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <small>© <span id="yr"></span> Bodrul Telecom • LocalStorage powered</small>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
