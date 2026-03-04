@@ -1,55 +1,72 @@
-const LS_KEY = "bodrul_telecom_v1";
+import { api } from "./firebase.js";
 
 const $ = (s) => document.querySelector(s);
 
-const state = loadState();
+const state = {
+  themeHue: 210,
+  uid: null,
+  products: [],
+  sales: [],
+  purchases: [],
+  mode: "cloud" // cloud | guest
+};
 
-function loadState() {
-  const raw = localStorage.getItem(LS_KEY);
-  if (raw) return JSON.parse(raw);
+const LS_THEME = "bodrul_theme_hue";
+const LS_GUEST = "bodrul_guest_v1";
 
-  // default seed
-  return {
-    themeHue: 210,
-    products: [
-      // {id, name, buy, sell, stock}
-    ],
-    sales: [
-      // {ts, productId, qty, total, discount}
-    ],
-    purchases: [
-      // {ts, productId, qty, note}
-    ],
-  };
-}
+let unsubProducts = null;
+let unsubSales = null;
+let unsubPurchases = null;
 
-function saveState() {
-  localStorage.setItem(LS_KEY, JSON.stringify(state));
-}
+// ---------- utils ----------
+function fmtMoney(n) { return "৳" + Number(n || 0).toFixed(0); }
 
-function uid() {
-  return Math.random().toString(16).slice(2) + Date.now().toString(16);
-}
-
-function fmtMoney(n) {
-  return "৳" + Number(n || 0).toFixed(0);
-}
 function fmtTime(ts) {
-  const d = new Date(ts);
-  return d.toLocaleString("bn-BD");
-}
-
-function getProduct(id) {
-  return state.products.find(p => p.id === id);
+  if (!ts) return "";
+  // Firestore Timestamp => ts.toDate()
+  try {
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    return d.toLocaleString("bn-BD");
+  } catch {
+    return "";
+  }
 }
 
 function setHue(h) {
   state.themeHue = Number(h);
   document.documentElement.style.setProperty("--h", state.themeHue);
   $("#chip").style.background = `hsl(${state.themeHue} 90% 50%)`;
-  saveState();
+  localStorage.setItem(LS_THEME, String(state.themeHue));
 }
 
+function getProduct(id) {
+  return state.products.find(p => p.id === id);
+}
+
+function showAuthModal(show) {
+  $("#authModal").classList.toggle("show", !!show);
+}
+
+function setUserBadge(text, loggedIn) {
+  $("#userBadge").textContent = text;
+  $("#logoutBtn").style.display = loggedIn ? "inline-flex" : "none";
+}
+
+// ---------- guest (local) ----------
+function loadGuest() {
+  const raw = localStorage.getItem(LS_GUEST);
+  if (!raw) return { products: [], sales: [], purchases: [] };
+  return JSON.parse(raw);
+}
+function saveGuest() {
+  localStorage.setItem(LS_GUEST, JSON.stringify({
+    products: state.products,
+    sales: state.sales,
+    purchases: state.purchases
+  }));
+}
+
+// ---------- render ----------
 function renderSelects() {
   const opts = state.products.map(p => `<option value="${p.id}">${p.name}</option>`).join("");
   $("#sellProduct").innerHTML = opts || `<option value="">No products</option>`;
@@ -75,14 +92,19 @@ function renderProducts() {
     </tr>
   `).join("");
 
-  // delete handlers
   tbody.querySelectorAll("[data-del]").forEach(btn => {
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", async () => {
       const id = btn.getAttribute("data-del");
-      state.products = state.products.filter(p => p.id !== id);
-      // keep history intact; only remove product record
-      saveState();
-      renderAll();
+
+      if (!confirm("এই প্রডাক্ট ডিলিট করবেন?")) return;
+
+      if (state.mode === "cloud") {
+        await api.deleteProduct(state.uid, id);
+      } else {
+        state.products = state.products.filter(p => p.id !== id);
+        saveGuest();
+        renderAll();
+      }
     });
   });
 }
@@ -93,8 +115,8 @@ function renderSales() {
     tbody.innerHTML = `<tr><td colspan="4">বিক্রয় নেই।</td></tr>`;
     return;
   }
-  const rows = [...state.sales].reverse().slice(0, 200);
 
+  const rows = state.sales.slice(0, 200); // already desc in cloud
   tbody.innerHTML = rows.map(s => {
     const p = getProduct(s.productId);
     return `
@@ -114,8 +136,8 @@ function renderPurchases() {
     tbody.innerHTML = `<tr><td colspan="4">ক্রয়/স্টক যোগ নেই।</td></tr>`;
     return;
   }
-  const rows = [...state.purchases].reverse().slice(0, 200);
 
+  const rows = state.purchases.slice(0, 200);
   tbody.innerHTML = rows.map(x => {
     const p = getProduct(x.productId);
     return `
@@ -136,7 +158,7 @@ function renderAll() {
   renderPurchases();
 }
 
-// Tabs
+// ---------- tabs ----------
 document.querySelectorAll(".tab").forEach(t => {
   t.addEventListener("click", () => {
     document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
@@ -146,8 +168,97 @@ document.querySelectorAll(".tab").forEach(t => {
   });
 });
 
-// Add Product
-$("#addProductForm").addEventListener("submit", (e) => {
+// ---------- theme init ----------
+const savedHue = localStorage.getItem(LS_THEME);
+setHue(savedHue ?? 210);
+$("#hue").value = state.themeHue;
+$("#hue").addEventListener("input", (e) => setHue(e.target.value));
+
+// ---------- auth UI ----------
+$("#authForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = $("#authEmail").value.trim();
+  const pass = $("#authPass").value;
+
+  $("#loginBtn").disabled = true;
+  try {
+    await api.loginOrRegister(email, pass);
+    // onAuthStateChanged will handle rest
+  } catch (err) {
+    alert(err?.message || "Login failed");
+  } finally {
+    $("#loginBtn").disabled = false;
+  }
+});
+
+$("#guestBtn").addEventListener("click", () => {
+  state.mode = "guest";
+  showAuthModal(false);
+  setUserBadge("Guest (Local only)", false);
+
+  const g = loadGuest();
+  state.products = g.products || [];
+  state.sales = (g.sales || []).slice().reverse();      // show newest first
+  state.purchases = (g.purchases || []).slice().reverse();
+  renderAll();
+});
+
+$("#logoutBtn").addEventListener("click", async () => {
+  await api.logout();
+});
+
+// ---------- realtime cloud wiring ----------
+function detachRealtime() {
+  if (unsubProducts) unsubProducts();
+  if (unsubSales) unsubSales();
+  if (unsubPurchases) unsubPurchases();
+  unsubProducts = unsubSales = unsubPurchases = null;
+}
+
+function attachRealtime(uid) {
+  detachRealtime();
+
+  unsubProducts = api.listenProducts(uid, (items) => {
+    state.products = items.map(p => ({
+      ...p,
+      buy: Number(p.buy || 0),
+      sell: Number(p.sell || 0),
+      stock: Number(p.stock || 0)
+    }));
+    renderAll();
+  });
+
+  unsubSales = api.listenSales(uid, (items) => {
+    state.sales = items;
+    renderAll();
+  });
+
+  unsubPurchases = api.listenPurchases(uid, (items) => {
+    state.purchases = items;
+    renderAll();
+  });
+}
+
+// ---------- auth state ----------
+api.onAuth((user) => {
+  if (!user) {
+    state.uid = null;
+    state.mode = "cloud";
+    detachRealtime();
+    showAuthModal(true);
+    setUserBadge("Not logged in", false);
+    return;
+  }
+
+  state.uid = user.uid;
+  state.mode = "cloud";
+  showAuthModal(false);
+  setUserBadge(user.email || "Logged in", true);
+  attachRealtime(state.uid);
+});
+
+// ---------- forms: add product ----------
+$("#addProductForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const name = $("#pName").value.trim();
@@ -157,18 +268,22 @@ $("#addProductForm").addEventListener("submit", (e) => {
 
   if (!name) return;
 
-  state.products.push({ id: uid(), name, buy, sell, stock });
-  saveState();
+  if (state.mode === "cloud") {
+    await api.addProduct(state.uid, { name, buy, sell, stock });
+  } else {
+    state.products.push({ id: crypto.randomUUID(), name, buy, sell, stock });
+    saveGuest();
+    renderAll();
+  }
 
   e.target.reset();
   $("#pStock").value = 0;
-
-  renderAll();
 });
 
-// Sell
-$("#sellForm").addEventListener("submit", (e) => {
+// ---------- forms: sell ----------
+$("#sellForm").addEventListener("submit", async (e) => {
   e.preventDefault();
+
   const productId = $("#sellProduct").value;
   const qty = Number($("#sellQty").value);
   const discount = Number($("#sellDiscount").value || 0);
@@ -178,22 +293,29 @@ $("#sellForm").addEventListener("submit", (e) => {
   if (qty <= 0) return;
   if (p.stock < qty) return alert("স্টক কম আছে!");
 
-  p.stock -= qty;
-
+  const newStock = p.stock - qty;
   const total = Math.max(0, (p.sell * qty) - discount);
-  state.sales.push({ ts: Date.now(), productId, qty, total, discount });
 
-  saveState();
+  if (state.mode === "cloud") {
+    await api.updateProduct(state.uid, p.id, { stock: newStock });
+    await api.addSale(state.uid, { productId: p.id, qty, discount, total });
+    // realtime listener will refresh UI
+  } else {
+    p.stock = newStock;
+    state.sales.unshift({ ts: Date.now(), productId: p.id, qty, discount, total });
+    saveGuest();
+    renderAll();
+  }
+
   e.target.reset();
   $("#sellQty").value = 1;
   $("#sellDiscount").value = 0;
-
-  renderAll();
 });
 
-// Add Stock / Purchase
-$("#stockForm").addEventListener("submit", (e) => {
+// ---------- forms: add stock ----------
+$("#stockForm").addEventListener("submit", async (e) => {
   e.preventDefault();
+
   const productId = $("#stockProduct").value;
   const qty = Number($("#stockQty").value);
   const note = $("#stockNote").value.trim();
@@ -202,23 +324,30 @@ $("#stockForm").addEventListener("submit", (e) => {
   if (!p) return alert("প্রডাক্ট সিলেক্ট করুন");
   if (qty <= 0) return;
 
-  p.stock += qty;
-  state.purchases.push({ ts: Date.now(), productId, qty, note });
+  const newStock = p.stock + qty;
 
-  saveState();
+  if (state.mode === "cloud") {
+    await api.updateProduct(state.uid, p.id, { stock: newStock });
+    await api.addPurchase(state.uid, { productId: p.id, qty, note });
+  } else {
+    p.stock = newStock;
+    state.purchases.unshift({ ts: Date.now(), productId: p.id, qty, note });
+    saveGuest();
+    renderAll();
+  }
+
   e.target.reset();
   $("#stockQty").value = 1;
-
-  renderAll();
 });
 
-// Theme slider init
-$("#hue").value = state.themeHue;
-$("#hue").addEventListener("input", (e) => setHue(e.target.value));
-
-// Export
+// ---------- export ----------
 $("#exportBtn").addEventListener("click", () => {
-  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+  const payload = {
+    products: state.products,
+    sales: state.sales,
+    purchases: state.purchases
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -227,16 +356,20 @@ $("#exportBtn").addEventListener("click", () => {
   URL.revokeObjectURL(url);
 });
 
-// Reset
-$("#resetBtn").addEventListener("click", () => {
+// ---------- reset ----------
+$("#resetBtn").addEventListener("click", async () => {
   if (!confirm("সব ডেটা ডিলিট হবে। নিশ্চিত?")) return;
-  localStorage.removeItem(LS_KEY);
-  location.reload();
+
+  if (state.mode === "cloud") {
+    await api.resetAll(state.uid);
+  } else {
+    localStorage.removeItem(LS_GUEST);
+    location.reload();
+  }
 });
 
-// Footer year
+// footer year
 $("#yr").textContent = new Date().getFullYear();
 
-// initial apply
-setHue(state.themeHue);
+// initial empty render (before auth loads)
 renderAll();
