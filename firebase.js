@@ -25,12 +25,13 @@ import {
 
 // ✅ আপনার কনফিগ বসান
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MSG_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBLMg5Qcq_jxN-todHIbPV66JfaeuGDz94",
+  authDomain: "bodrultelecom-6763f.firebaseapp.com",
+  projectId: "bodrultelecom-6763f",
+  storageBucket: "bodrultelecom-6763f.firebasestorage.app",
+  messagingSenderId: "822994053076",
+  appId: "1:822994053076:web:b359d83fbdac305a8c5841",
+  measurementId: "G-VM0H4W7S9C"
 };
 
 export const app = initializeApp(firebaseConfig);
