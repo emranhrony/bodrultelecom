@@ -1,0 +1,129 @@
+:root{
+  --h: 210;
+  --accent: hsl(var(--h) 90% 50%);
+  --accent2: hsl(var(--h) 90% 40%);
+  --bg: #0b1020;
+  --card: rgba(255,255,255,.06);
+  --border: rgba(255,255,255,.12);
+  --text: rgba(255,255,255,.92);
+  --muted: rgba(255,255,255,.70);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: radial-gradient(800px 500px at 20% 0%, rgba(255,255,255,.08), transparent),
+              radial-gradient(600px 400px at 90% 10%, rgba(255,255,255,.06), transparent),
+              var(--bg);
+  color: var(--text);
+}
+
+.topbar{
+  display:flex;
+  gap:16px;
+  align-items:center;
+  justify-content:space-between;
+  padding:18px 18px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  backdrop-filter: blur(10px);
+  background: rgba(11,16,32,.75);
+}
+.brand h1{margin:0; font-size: 22px; letter-spacing:.2px}
+.sub{margin:2px 0 0; color: var(--muted); font-size: 13px}
+
+.themeBox{display:flex; gap:10px; align-items:center}
+.themeBox label{font-size:12px; color: var(--muted)}
+.themeBox input{width:180px}
+.chip{
+  width:18px; height:18px; border-radius:6px;
+  background: var(--accent);
+  border:1px solid var(--border);
+}
+
+.container{max-width:1100px; margin: 18px auto; padding: 0 16px}
+.card{
+  border:1px solid var(--border);
+  background: var(--card);
+  border-radius: 18px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.25);
+}
+.card h2{margin:0 0 12px; font-size: 18px}
+.box{
+  flex:1;
+  border:1px solid var(--border);
+  background: rgba(255,255,255,.04);
+  border-radius: 16px;
+  padding: 14px;
+}
+.box h3{margin:0 0 10px; font-size: 15px; color: var(--muted)}
+
+.row{display:flex; flex-wrap:wrap}
+.gap{gap:12px}
+
+.grid2{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 10px;
+  align-items:end;
+}
+.grid2 .full{grid-column: 1 / -1}
+
+label{display:block; font-size:12px; color: var(--muted); margin-bottom:6px}
+input, select{
+  width:100%;
+  padding: 10px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(0,0,0,.18);
+  color: var(--text);
+  outline:none;
+}
+input:focus, select:focus{border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,0,0,.25)}
+
+.btn{
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,.06);
+  color: var(--text);
+  cursor:pointer;
+  transition: .15s transform, .15s background;
+}
+.btn:hover{transform: translateY(-1px); background: rgba(255,255,255,.09)}
+.btn.primary{background: var(--accent); border-color: transparent; color: #001018}
+.btn.primary:hover{background: var(--accent2)}
+.btn.danger{background: #ff355d; border-color: transparent; color: #150007}
+.btn.ghost{background: transparent}
+
+.tableWrap{overflow:auto; border-radius: 14px; border:1px solid var(--border)}
+table{width:100%; border-collapse: collapse; font-size: 13px}
+th, td{padding:10px; border-bottom:1px solid rgba(255,255,255,.08)}
+th{color: var(--muted); font-weight:600; text-align:left}
+tbody tr:hover{background: rgba(255,255,255,.04)}
+
+.tabs{display:flex; gap:8px; margin: 8px 0 10px}
+.tab{
+  padding:8px 10px;
+  border-radius: 999px;
+  border:1px solid var(--border);
+  background: rgba(255,255,255,.04);
+  color: var(--text);
+  cursor:pointer;
+  font-size: 13px;
+}
+.tab.active{background: rgba(0,0,0,.25); border-color: var(--accent)}
+.tabPanel{display:none}
+.tabPanel.active{display:block}
+
+.actions{display:flex; gap:8px; margin-top:10px; justify-content:flex-end}
+
+.footer{
+  padding: 16px;
+  text-align:center;
+  color: var(--muted);
+}
